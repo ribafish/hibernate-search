@@ -512,12 +512,19 @@
                 <directory>${project.basedir}/src/main/resources</directory>
             </resource>
             <resource>
-                <!-- Extra dir to include the license file: -->
-                <directory>${rootProject.directory}</directory>
-                <includes>
-                    <include>LICENSE.txt</include>
-                </includes>
-                <targetPath>META-INF</targetPath>
+                <!--
+                    Module-local staging directory for the license file; populated from
+                    rootProject.directory/LICENSE.txt by the copy-license execution of
+                    maven-resources-plugin below.
+                    Pointing the <resource> at rootProject.directory directly leaks the
+                    whole repo root into every cacheable goal's inputs (checkstyle,
+                    compile, resources), because the Develocity Maven extension
+                    fingerprints the configured <directory> as a whole and does not
+                    honour the <includes> filter. In multi-module install builds the
+                    root directory grows as earlier modules populate target/, producing
+                    different cache keys on every rebuild.
+                -->
+                <directory>${project.build.directory}/license-resources</directory>
             </resource>
         </resources>
         <pluginManagement>
@@ -631,6 +638,26 @@
                              sources for all depending projects. -->
                         <overwrite>false</overwrite>
                     </configuration>
+                    <executions>
+                        <execution>
+                            <id>copy-license</id>
+                            <phase>generate-resources</phase>
+                            <goals>
+                                <goal>copy-resources</goal>
+                            </goals>
+                            <configuration>
+                                <outputDirectory>${project.build.directory}/license-resources/META-INF</outputDirectory>
+                                <resources>
+                                    <resource>
+                                        <directory>${rootProject.directory}</directory>
+                                        <includes>
+                                            <include>LICENSE.txt</include>
+                                        </includes>
+                                    </resource>
+                                </resources>
+                            </configuration>
+                        </execution>
+                    </executions>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
