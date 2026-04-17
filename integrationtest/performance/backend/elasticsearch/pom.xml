@@ -91,6 +91,31 @@
                 </dependencies>
             </plugin>
             <plugin>
+                <!--
+                    maven-processor-plugin writes .maven-processor-source-files.txt under
+                    generated-sources/apt, and that directory is added to compileSourceRoots.
+                    The file contains absolute source paths, so compile inputs are not
+                    relocatable — two builds from different checkouts miss the cache.
+                    Remove it after the processor runs but before compile fingerprinting.
+                -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>delete-processor-tracking-file</id>
+                        <phase>process-sources</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <delete file="${project.build.directory}/generated-sources/apt/.maven-processor-source-files.txt" quiet="true"/>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
                 <executions>
